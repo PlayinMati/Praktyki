@@ -24,7 +24,7 @@ Zapisz raport do nowego pliku tekstowego (raport.txt).
 
 - Wprowadznone Zmiany: Dodałem try catch przy otwieraniu pliku. Dodałem mierzenie czasu działania aplikacji.
 
-## Zadanie1
+## Zadanie2
 - Opis: Zadaniem jest stworzenie w aplikacji konsolowej symulatora prostej, turowej walki rodem z gier RPG. Gracz będzie kontrolował bohatera, który walczy z losowo wybranym przeciwnikiem.  
 Główne cele: 
 Stwórz abstrakcyjną klasę bazową Character, która będzie zawierać wspólne cechy dla wszystkich postaci w grze: 
@@ -49,5 +49,31 @@ Po każdej akcji, na konsoli powinien pojawić się czytelny log, np. "Hero 'Art
 Główna część programu (Main): Stwórz obiekt Hero i losowego Monster, a następnie przekażcie ich do BattleArena i rozpocznij pojedynek. 
 
 - Wprowadzone zmiany: 
+
+## Zadanie 3 
+ 
+- Opis: Aplikacja powinna zarządzać asortymentem produktów, przyjmować "wirtualne" pieniądze i pozwalać na zakup. 
+ 
+Główne cele: 
+Stwórz abstrakcyjną klasę Product z właściwościami: Name (string) i Price (decimal). 
+Stwórz klasy konkretnych produktów, które dziedziczą po Product, np.: 
+Beverage (z dodatkową właściwością Volume w ml). 
+Snack (z dodatkową właściwością Weight w gramach). 
+Stwórz klasę VendingMachine, która będzie sercem aplikacji. Powinna ona zarządzać swoim stanem wewnętrznym: 
+Przechowywać listę dostępnych produktów (np. w Dictionary<string, ProductSlot>, gdzie klucz to kod produktu, np. "A1"). 
+Przechowywać aktualnie wrzuconą przez użytkownika kwotę (decimal jako CurrentCredit). 
+Zaimplementuj metody publiczne w VendingMachine (interfejs automatu): 
+InsertCoin(decimal amount): Dodaje pieniądze do puli kredytu. 
+DisplayProducts(): Pokazuje listę dostępnych produktów, ich kody, ceny i ilość. 
+SelectProduct(string productCode): Obsługuje logikę zakupu. Metoda musi sprawdzić: 
+Czy produkt o danym kodzie istnieje. 
+Czy jest dostępny (ilość > 0). 
+Czy użytkownik wrzucił wystarczającą ilość pieniędzy. 
+Jeśli wszystko się zgadza, metoda "wydaje" produkt (wyświetla komunikat), zmniejsza jego ilość w automacie i zwraca resztę. 
+ReturnChange(): Pozwala użytkownikowi odebrać wrzucone pieniądze bez dokonywania zakupu. 
+Główna część programu (Main): Stwórz instancję VendingMachine, "załaduj" go kilkoma produktami, a następnie w pętli stwórz menu, które pozwoli użytkownikowi na interakcję z automatem. 
+
+- Wprowadzone zmiany: 
+ 
 ## Autor
 Mateusz Bizoń
