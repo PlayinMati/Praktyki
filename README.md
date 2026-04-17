@@ -1,23 +1,23 @@
-# 📚 Praktyki
+#  Praktyki
 
 Repozytorium zawiera zadania wykonywane w trakcie praktyk.
 
 ---
 
-## 📂 Struktura projektu
+##  Struktura projektu
 - Zadanie1
 - Zadanie2
 - Zadanie3
 
 ---
 
-## 🛠 Technologie
+##  Technologie
 - C#
 - Visual Studio
 
 ---
 
-## 📄 Zadanie 1 – Analiza logów
+##  Zadanie 1 - Analiza logów
 
 ### Opis
 Aplikacja wczytuje plik tekstowy z logami systemowymi i wykonuje ich analizę:
@@ -32,7 +32,7 @@ Aplikacja wczytuje plik tekstowy z logami systemowymi i wykonuje ich analizę:
 
 ---
 
-## ⚔️ Zadanie 2 – Symulator walki RPG
+##  Zadanie 2 - Symulator walki RPG
 
 ### Opis
 Aplikacja symuluje turową walkę bohatera z przeciwnikiem:
@@ -43,11 +43,11 @@ Aplikacja symuluje turową walkę bohatera z przeciwnikiem:
 - logi walki w konsoli
 
 ### Wprowadzone zmiany
-- (uzupełnij, jeśli coś dodasz)
+- 
 
 ---
 
-## 🥤 Zadanie 3 – Automat vendingowy
+##  Zadanie 3 - Automat vendingowy
 
 ### Opis
 Aplikacja symuluje działanie automatu z produktami:
@@ -64,5 +64,5 @@ Aplikacja symuluje działanie automatu z produktami:
 
 ---
 
-## 👤 Autor
+##  Autor
 Mateusz Bizoń
