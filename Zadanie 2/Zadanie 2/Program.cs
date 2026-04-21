@@ -108,30 +108,44 @@ namespace RpgSimulator
         {
             Console.WriteLine("\n=== ROZPOCZYNA SIĘ WALKA! ===");
             Console.WriteLine($"{Player.Name} ({Player.HealthPoints} HP) VS {Opponent.Name} ({Opponent.HealthPoints} HP)\n");
+            Console.WriteLine("Naciśnij dowolny klawisz, aby rozpocząć pierwszą turę...");
+            Console.ReadKey(true); // true sprawia, że naciśnięty klawisz nie wyświetla się w konsoli
 
             int turn = 1;
 
-            // Pętla walki
             while (Player.IsAlive() && Opponent.IsAlive())
             {
+                Console.Clear(); // Opcjonalnie: czyści ekran, by każda tura była osobno
                 Console.WriteLine($"--- TURA {turn} ---");
+                Console.WriteLine($"{Player.Name}: {Player.HealthPoints} HP | {Opponent.Name}: {Opponent.HealthPoints} HP\n");
 
                 // Atak Gracza
                 Player.Attack(Opponent);
-                Console.WriteLine($"{Opponent.Name} ma teraz {Opponent.HealthPoints}/{Opponent.MaxHealthPoints} HP.\n");
 
-                // Sprawdzamy czy potwór zginął po naszym ataku
-                if (!Opponent.IsAlive()) break;
+                if (!Opponent.IsAlive())
+                {
+                    Console.WriteLine($"\n{Opponent.Name} pada na ziemię!");
+                    break;
+                }
 
+                Console.WriteLine("\n--- Ruch przeciwnika ---");
                 // Atak Przeciwnika
                 Opponent.Attack(Player);
-                Console.WriteLine($"{Player.Name} ma teraz {Player.HealthPoints}/{Player.MaxHealthPoints} HP.\n");
+
+                if (!Player.IsAlive())
+                {
+                    Console.WriteLine($"\n{Player.Name} traci przytomność!");
+                }
 
                 turn++;
+
+                // KLUCZOWY MOMENT: Czekanie na gracza
+                Console.WriteLine("\nNaciśnij dowolny klawisz, aby przejść dalej...");
+                Console.ReadKey(true);
             }
 
             // Podsumowanie bitwy
-            Console.WriteLine("=== KONIEC WALKI ===");
+            Console.WriteLine("\n=== KONIEC WALKI ===");
             if (Player.IsAlive())
                 Console.WriteLine($"Zwycięża {Player.Name}! Gratulacje!");
             else

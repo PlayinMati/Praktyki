@@ -43,7 +43,8 @@ Aplikacja symuluje turową walkę bohatera z przeciwnikiem:
 - logi walki w konsoli
 
 ### Wprowadzone zmiany
-- 
+- Podawanie imienia bohatera w konosli przez gracza
+- Wyswietlanie informacji o walce po kliknięciu dowolnego klawisza
 
 ---
 
