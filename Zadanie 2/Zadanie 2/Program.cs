@@ -5,30 +5,40 @@ namespace RpgSimulator
     // 1. Abstrakcyjna klasa bazowa
     public abstract class Character
     {
+        protected static readonly Random rnd = new Random();
+
         public string Name { get; set; }
-        public int HealthPoints { get; set; }
+
         public int MaxHealthPoints { get; set; }
         public int AttackPower { get; set; }
+
+        // Właściwość z publicznym pobieraniem (get) i PRYWATNYM zapisem (set)
+        // Dzięki temu 'BattleArena' może wyświetlić HP, ale nie może go zmienić.
+        public int HealthPoints { get; private set; }
 
         protected Character(string name, int maxHealth, int attack)
         {
             Name = name;
             MaxHealthPoints = maxHealth;
-            HealthPoints = maxHealth;
             AttackPower = attack;
+            // Ustawiamy HP tylko raz, przy tworzeniu postaci
+            HealthPoints = maxHealth;
         }
 
+        // JEDYNA dopuszczalna metoda zmiany HP zgodnie z wymaganiami
         public void TakeDamage(int damage)
         {
             HealthPoints -= damage;
             if (HealthPoints < 0) HealthPoints = 0;
+
+            // Opcjonalnie: logowanie w konsoli dla testu
+            // Console.WriteLine($"{Name} otrzymuje {damage} obrażeń. Pozostało: {HealthPoints} HP.");
         }
 
         public bool IsAlive() => HealthPoints > 0;
 
         public abstract void Attack(Character target);
     }
-
     // 2. Klasa Bohatera
     public class Hero : Character
     {
@@ -36,7 +46,6 @@ namespace RpgSimulator
 
         public override void Attack(Character target)
         {
-            Random rnd = new Random();
             int damage = AttackPower;
 
             if (rnd.Next(1, 6) == 1) // 20% szansy na krytyka
@@ -156,6 +165,7 @@ namespace RpgSimulator
     // 6. Główna część programu (Main)
     class Program
     {
+        private static readonly Random _gameRnd = new Random();
         static void Main(string[] args)
         {
             Console.WriteLine("=== WITAJ W RPG BATTLE SIMULATOR ===");
@@ -167,7 +177,7 @@ namespace RpgSimulator
 
             // Losowanie potwora
             Monster opponent;
-            if (new Random().Next(1, 3) == 1)
+            if (_gameRnd.Next(1, 3) == 1)
                 opponent = new Goblin();
             else
                 opponent = new Orc();
