@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace VendingMachineApp
+namespace ConsoleApp1
 {
     // --- MODELE DANYCH ---
 
@@ -12,9 +11,9 @@ namespace VendingMachineApp
         public decimal Price { get; set; }
     }
 
-    public class Beverage : Product { public int Volume { get; set; } }
-    public class Snack : Product { public int Weight { get; set; } }
-    public class Bread : Product { public int ExpirationDays { get; set; } }
+    public class Beverage : Product { public int Volume; }
+    public class Snack : Product { public int Weight; }
+    public class Bread : Product { public int ExpirationDays; }
 
     public class ProductSlot
     {
@@ -22,98 +21,99 @@ namespace VendingMachineApp
         public int Quantity { get; set; }
     }
 
-    // --- LOGIKA AUTOMATU ---
+    // --- LOGIKA AUTOMATU (NAPRAWIONA ENKAPSULACJA) ---
 
     public class VendingMachine
     {
-        // PRYWATNE pola - enkapsulacja stanu automatu
-        private readonly Dictionary<string, ProductSlot> _products = new Dictionary<string, ProductSlot>();
+        // Pole prywatne - ukrywamy stan przed bezpośrednią modyfikacją z zewnątrz
+        private Dictionary<string, ProductSlot> _productList = new Dictionary<string, ProductSlot>();
 
-        // Publiczny getter, prywatny setter - nikt z zewnątrz nie zmieni kredytu ręcznie
+        // Właściwość tylko do odczytu dla Main (aby pętle administratora działały)
+        public Dictionary<string, ProductSlot> ProductList => _productList;
+
+        // Kredyt z prywatnym setterem - nikt go nie "wyzeruje" ręcznie poza metodami klasy
         public decimal CurrentCredit { get; private set; }
 
         public void InsertCoin(decimal amount)
         {
             if (amount <= 0)
             {
-                Console.WriteLine(">>> Błąd: Kwota musi być większa niż zero.");
+                Console.WriteLine("Błąd: Kwota musi być większa niż zero.");
                 return;
             }
-            CurrentCredit += amount; // Poprawne dodawanie zamiast nadpisywania
+            // NAPRAWIONE: Kwota się dodaje, a nie nadpisuje
+            CurrentCredit += amount;
         }
 
-        public void AddOrUpdateProduct(string code, Product product, int quantity)
+        public void AddProduct(string code, Product product, int quantity)
         {
-            _products[code] = new ProductSlot { Product = product, Quantity = quantity };
-        }
-
-        public void Restock(string code, int quantity)
-        {
-            if (_products.ContainsKey(code))
-            {
-                _products[code].Quantity += quantity;
-            }
+            _productList[code] = new ProductSlot { Product = product, Quantity = quantity };
         }
 
         public void DisplayProducts()
         {
             Console.WriteLine("\n======= AUTOMAT Z PRZEKĄSKAMI =======");
-            if (!_products.Any())
+            if (_productList.Count == 0)
             {
                 Console.WriteLine("Maszyna jest obecnie pusta.");
             }
 
-            foreach (var item in _products)
+            foreach (var pair in _productList)
             {
-                var slot = item.Value;
-                string status = slot.Quantity > 0
-                    ? $"{slot.Product.Price:F2} PLN ({slot.Quantity} szt.)"
-                    : "WYPRZEDANY";
-
-                Console.WriteLine($"[{item.Key}] {slot.Product.Name.PadRight(15)} | {status}");
+                var slot = pair.Value;
+                if (slot.Quantity <= 0)
+                {
+                    Console.WriteLine($"[{pair.Key}] {slot.Product.Name.PadRight(12)} | WYPRZEDANY");
+                }
+                else
+                {
+                    Console.WriteLine($"[{pair.Key}] {slot.Product.Name.PadRight(12)} | Cena: {slot.Product.Price:F2} PLN | Sztuk: {slot.Quantity}");
+                }
             }
-            Console.WriteLine("=====================================");
-            Console.WriteLine($"Dostępne środki: {CurrentCredit:F2} PLN\n");
+            Console.WriteLine("==================================\n");
         }
 
-        public void SelectProduct(string code)
+        public void SelectProduct(string productsCode)
         {
-            if (!_products.TryGetValue(code, out ProductSlot slot))
+            if (_productList.ContainsKey(productsCode))
             {
-                Console.WriteLine(">>> Błąd: Niepoprawny kod produktu.");
-                return;
+                ProductSlot slot = _productList[productsCode];
+                if (slot.Quantity > 0)
+                {
+                    if (CurrentCredit >= slot.Product.Price)
+                    {
+                        Console.WriteLine($"\n[WYDANO]: {slot.Product.Name}");
+                        slot.Quantity--;
+                        CurrentCredit -= slot.Product.Price;
+                        Console.WriteLine($"Pozostały kredyt: {CurrentCredit:F2} PLN");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"\nBłąd: Niewystarczające środki (Brakuje: {slot.Product.Price - CurrentCredit:F2} PLN).");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nBłąd: Produkt wyprzedany.");
+                }
             }
-
-            if (slot.Quantity <= 0)
+            else
             {
-                Console.WriteLine(">>> Błąd: Produkt wyprzedany.");
-                return;
+                Console.WriteLine("\nBłąd: Niepoprawny kod produktu.");
             }
-
-            if (CurrentCredit < slot.Product.Price)
-            {
-                Console.WriteLine($">>> Błąd: Niewystarczające środki. Brakuje {(slot.Product.Price - CurrentCredit):F2} PLN");
-                return;
-            }
-
-            // Realizacja zakupu
-            slot.Quantity--;
-            CurrentCredit -= slot.Product.Price;
-            Console.WriteLine($"\n[WYDANO]: {slot.Product.Name}");
-            Console.WriteLine($"Pozostały kredyt: {CurrentCredit:F2} PLN");
         }
 
         public void ReturnChange()
         {
             if (CurrentCredit <= 0)
             {
-                Console.WriteLine("Brak reszty do wydania.");
+                Console.WriteLine("\nBrak reszty do zwrotu.");
                 return;
             }
 
-            Console.WriteLine($"\n--- WYDAWANIE RESZTY: {CurrentCredit:F2} PLN ---");
+            Console.WriteLine($"\n--- ZWRACANIE RESZTY: {CurrentCredit:F2} PLN ---");
 
-            // Algorytm zachłanny wydawania reszty
+            // Logika wydawania konkretnymi nominałami
             decimal[] denominations = { 5.00m, 2.00m, 1.00m, 0.50m, 0.20m, 0.10m, 0.05m, 0.02m, 0.01m };
             decimal remaining = CurrentCredit;
 
@@ -124,8 +124,7 @@ namespace VendingMachineApp
                 {
                     Console.WriteLine($"Wydano {count} x {coin:F2} PLN");
                     remaining %= coin;
-                    // Zaokrąglenie błędu precyzji zmiennoprzecinkowej
-                    remaining = Math.Round(remaining, 2);
+                    remaining = Math.Round(remaining, 2); // Zaokrąglenie błędów precyzji
                 }
             }
 
@@ -136,82 +135,258 @@ namespace VendingMachineApp
 
     // --- PROGRAM GŁÓWNY ---
 
-    internal class Program
-    {
-        static void Main(string[] args)
-        {
-            VendingMachine machine = new VendingMachine();
 
-            // Dane startowe
-            machine.AddOrUpdateProduct("A1", new Beverage { Name = "Coca-Cola", Price = 5.50m, Volume = 500 }, 5);
-            machine.AddOrUpdateProduct("A2", new Snack { Name = "Lay's", Price = 7.00m, Weight = 150 }, 3);
-            machine.AddOrUpdateProduct("A3", new Bread { Name = "Rogalik", Price = 3.50m, ExpirationDays = 2 }, 4);
+
+    internal class Program
+
+    {
+
+        static void Main(string[] args)
+
+        {
+
+            VendingMachine vendingMachine = new VendingMachine();
+
+
+
+            // Produkty startowe
+
+            vendingMachine.AddProduct("A1", new Beverage { Name = "Coca-Cola", Price = 5.50m, Volume = 500 }, 5);
+
+            vendingMachine.AddProduct("A2", new Snack { Name = "Lay's", Price = 7.00m, Weight = 150 }, 3);
+
+            vendingMachine.AddProduct("A3", new Bread { Name = "Rogalik", Price = 3.50m, ExpirationDays = 2 }, 4);
+
+
+
+            vendingMachine.DisplayProducts();
+
+
 
             while (true)
-            {
-                machine.DisplayProducts();
-                Console.WriteLine("Opcje: [kwota] - wrzuć monetę | [kod] - zakup | 'exit' - wyjście i reszta | 'admin' - panel");
-                Console.Write("Wybór: ");
-                string input = Console.ReadLine()?.Trim();
 
-                if (string.IsNullOrEmpty(input)) continue;
+            {
+
+                Console.Write("Wprowadź kwotę doładowania (PLN): ");
+
+                if (decimal.TryParse(Console.ReadLine(), out decimal initialCredit))
+
+                {
+
+                    vendingMachine.InsertCoin(initialCredit);
+
+                }
+
+                Console.WriteLine($"\nAktualny kredyt: {vendingMachine.CurrentCredit} PLN");
+
+                Console.Write("Wprowadź kod produktu (lub 'exit'): ");
+
+                string input = Console.ReadLine();
+
+
+
+                if (string.IsNullOrWhiteSpace(input)) continue;
 
                 if (input.ToLower() == "exit")
+
                 {
-                    machine.ReturnChange();
+
+                    vendingMachine.ReturnChange();
+
                     break;
+
                 }
 
-                if (input.ToLower() == "admin")
+
+
+
+                // TRYB ADMINISTRATORA
+
+                if (input == "0000")
+
                 {
-                    RunAdminMenu(machine);
+
+                    bool inAdminMenu = true;
+
+                    while (inAdminMenu)
+
+                    {
+
+                        Console.WriteLine("\n--- PANEL ADMINISTRATORA ---");
+
+                        Console.WriteLine("1. Uzupełnij zapas (istniejący produkt)");
+
+                        Console.WriteLine("2. Dodaj całkowicie nowy produkt");
+
+                        Console.WriteLine("3. Wyjdź z panelu");
+
+                        Console.Write("Wybór: ");
+
+
+
+                        string adminChoice = Console.ReadLine();
+
+
+
+                        switch (adminChoice)
+
+                        {
+
+                            case "1": // UZUPEŁNIANIE
+
+                                Console.WriteLine("\nFormat: [kod] [ilość_do_dodania]");
+
+                                string restockInput = Console.ReadLine();
+
+                                string[] restockParts = restockInput?.Split(' ');
+
+
+
+                                if (restockParts?.Length == 2 && vendingMachine.ProductList.ContainsKey(restockParts[0]))
+
+                                {
+
+                                    if (int.TryParse(restockParts[1], out int additional))
+
+                                    {
+
+                                        vendingMachine.ProductList[restockParts[0]].Quantity += additional;
+
+                                        Console.WriteLine("Zapas uzupełniony.");
+
+                                    }
+
+                                }
+
+                                else { Console.WriteLine("Błąd: Nieprawidłowy kod lub dane."); }
+
+                                break;
+
+                            // Fragment kodu wewnątrz menu administratora (case "2")
+
+                            case "2": // NOWY PRODUKT
+
+                                Console.WriteLine("\nKategorie: 1-Napój, 2-Przekąska, 3-Pieczywo");
+
+                                Console.Write("Wybierz typ: ");
+
+                                string type = Console.ReadLine();
+
+
+
+                                string specName = "";
+
+                                if (type == "1") specName = "objętość";
+
+                                else if (type == "2") specName = "waga";
+
+                                else specName = "ważność";
+
+
+
+                                Console.WriteLine($"Format: [kod] [nazwa] [cena] [ilość] [{specName}]");
+
+
+
+                                string inputLine = Console.ReadLine();
+
+                                string[] p = inputLine != null ? inputLine.Split(' ') : null;
+
+
+
+                                if (p != null && p.Length >= 5)
+
+                                {
+
+                                    try
+
+                                    {
+
+                                        string code = p[0];
+
+                                        string name = p[1];
+
+                                        decimal pr = decimal.Parse(p[2]);
+
+                                        int q = int.Parse(p[3]);
+
+                                        int spec = int.Parse(p[4]);
+
+
+
+                                        Product prod = null;
+
+                                        switch (type)
+
+                                        {
+
+                                            case "1":
+
+                                                prod = new Beverage { Name = name, Price = pr, Volume = spec };
+
+                                                break;
+
+                                            case "2":
+
+                                                prod = new Snack { Name = name, Price = pr, Weight = spec };
+
+                                                break;
+
+                                            case "3":
+
+                                            default:
+
+                                                prod = new Bread { Name = name, Price = pr, ExpirationDays = spec };
+
+                                                break;
+
+                                        }
+
+
+
+                                        vendingMachine.AddProduct(code, prod, q);
+
+                                        Console.WriteLine("Nowy produkt dodany.");
+
+                                    }
+
+                                    catch
+
+                                    {
+
+                                        Console.WriteLine("Błąd danych. Upewnij się, że cena i liczby są poprawne.");
+
+                                    }
+
+                                }
+
+                                break;
+
+                            case "3":
+
+                                inAdminMenu = false;
+
+                                break;
+
+                        }
+
+                    }
+
+                    vendingMachine.DisplayProducts();
+
                     continue;
+
                 }
 
-                // Próba parsowania kwoty (doładowanie)
-                if (decimal.TryParse(input, out decimal coin))
-                {
-                    machine.InsertCoin(coin);
-                }
-                else // Jeśli to nie liczba, traktujemy jak kod produktu
-                {
-                    machine.SelectProduct(input.ToUpper());
-                }
+
+                // ZWYKŁY WYBÓR PRODUKTU
+
+                vendingMachine.SelectProduct(input);
+
             }
+
         }
 
-        static void RunAdminMenu(VendingMachine machine)
-        {
-            Console.WriteLine("\n--- PANEL ADMINISTRATORA (Kod: 0000) ---");
-            Console.Write("Podaj kod dostępu: ");
-            if (Console.ReadLine() != "0000") return;
-
-            Console.WriteLine("1. Uzupełnij zapas");
-            Console.WriteLine("2. Dodaj nowy produkt");
-            string choice = Console.ReadLine();
-
-            if (choice == "1")
-            {
-                Console.Write("Podaj kod produktu i ilość (np. A1 10): ");
-                string[] parts = Console.ReadLine()?.Split(' ');
-                if (parts?.Length == 2 && int.TryParse(parts[1], out int qty))
-                {
-                    machine.Restock(parts[0].ToUpper(), qty);
-                    Console.WriteLine("Uzupełniono.");
-                }
-            }
-            else if (choice == "2")
-            {
-                // Tutaj uproszczona logika dodawania
-                Console.WriteLine("Format: [kod] [nazwa] [cena] [ilość]");
-                string[] p = Console.ReadLine()?.Split(' ');
-                if (p?.Length == 4)
-                {
-                    machine.AddOrUpdateProduct(p[0].ToUpper(),
-                        new Snack { Name = p[1], Price = decimal.Parse(p[2]) },
-                        int.Parse(p[3]));
-                }
-            }
-        }
     }
+
 }
